@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Música Musical</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .tempo-btn {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 0.85rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            max-width: 280px;
+            line-height: 1.3;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .info ul {
+            margin: 8px 0;
+            padding-left: 16px;
+        }
+
+        .info li {
+            margin: 4px 0;
+            font-size: 0.8rem;
+        }
+
+        .sound-wave {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .tempo-indicator {
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tempo-pulse {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateY(-50%) scale(1); border-color: rgba(255,255,255,0.3); }
+            50% { transform: translateY(-50%) scale(1.1); border-color: rgba(255,255,255,0.8); }
+        }
+
+        .recording-indicator {
+            position: absolute;
+            top: 250px;
+            left: 30px;
+            color: #ff4444;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+        }
+
+        .recording-indicator.active {
+            opacity: 1;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .sound-count {
+            position: absolute;
+            top: 100px;
+            left: 30px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .volume-control {
+            position: absolute;
+            top: 150px;
+            left: 30px;
+            color: white;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .volume-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .volume-value {
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">🎵 Música Musical 🎵</h1>
+    </div>
+
+    <div class="info">
+        <h3>📖 ¿Cómo usar?</h3>
+        <strong>¡Haz click para crear música!</strong>
+        <ul>
+            <li>🎹 <strong>Zona superior:</strong> Sonidos agudos</li>
+            <li>🥁 <strong>Zona media:</strong> Sonidos medios</li>
+            <li>🎸 <strong>Zona inferior:</strong> Sonidos graves</li>
+            <li>🎵 <strong>Tempo:</strong> Mantén el ritmo</li>
+            <li>🔊 <strong>Volumen:</strong> Ajusta la intensidad</li>
+        </ul>
+    </div>
+
+    <div class="sound-count">🎼 Sonidos: <span id="soundCount">0</span></div>
+    
+    <div class="volume-control">
+        <div class="volume-label">🔊 Volumen de reproducción</div>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70">
+        <div class="volume-value"><span id="volumeValue">70</span>%</div>
+    </div>
+
+    <div class="recording-indicator" id="recordingIndicator">● GRABANDO</div>
+
+    <div class="tempo-indicator" id="tempoIndicator">♪</div>
+
+    <div class="controls">
+        <button class="btn play-btn" id="playBtn">▶️ Reproducir</button>
+        <button class="btn clear-btn" id="clearBtn">🗑️ Limpiar</button>
+        <button class="btn tempo-btn" id="tempoBtn">🎵 Tempo</button>
+    </div>
+
+    <script>
+        class MusicaMusical {
+            constructor() {
+                this.audioContext = null;
+                this.recordedSounds = [];
+                this.isPlaying = false;
+                this.tempoEnabled = false;
+                this.tempoInterval = null;
+                this.startTime = null;
+                this.volume = 0.7; // Volumen inicial al 70%
+                
+                this.initAudio();
+                this.bindEvents();
+            }
+
+            async initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+                } catch (error) {
+                    console.log('Audio context not available');
+                }
+            }
+
+            bindEvents() {
+                document.addEventListener('click', (e) => this.handleClick(e));
+                document.getElementById('playBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.playRecording();
+                });
+                document.getElementById('clearBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.clearRecording();
+                });
+                document.getElementById('tempoBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleTempo();
+                });
+                
+                // Control de volumen
+                const volumeSlider = document.getElementById('volumeSlider');
+                const volumeValue = document.getElementById('volumeValue');
+                
+                volumeSlider.addEventListener('input', (e) => {
+                    this.volume = e.target.value / 100;
+                    volumeValue.textContent = e.target.value;
+                });
+            }
+
+            handleClick(e) {
+                // No procesar clicks en botones
+                if (e.target.classList.contains('btn')) return;
+
+                const x = e.clientX;
+                const y = e.clientY;
+                const timestamp = this.startTime ? Date.now() - this.startTime : 0;
+
+                if (!this.startTime) {
+                    this.startTime = Date.now();
+                }
+
+                // Determinar el tipo de sonido basado en la posición Y
+                const windowHeight = window.innerHeight;
+                let soundType, frequency, color;
+
+                if (y < windowHeight / 3) {
+                    // Sonidos agudos
+                    soundType = 'treble';
+                    frequency = 800 + (x / window.innerWidth) * 400;
+                    color = '#ff6b6b';
+                } else if (y < (windowHeight * 2) / 3) {
+                    // Sonidos medios
+                    soundType = 'mid';
+                    frequency = 300 + (x / window.innerWidth) * 300;
+                    color = '#4ecdc4';
+                } else {
+                    // Sonidos graves
+                    soundType = 'bass';
+                    frequency = 100 + (x / window.innerWidth) * 200;
+                    color = '#45b7d1';
+                }
+
+                // Guardar el sonido
+                this.recordedSounds.push({
+                    x, y, timestamp, frequency, soundType, color
+                });
+
+                // Reproducir el sonido con volumen completo para clicks en tiempo real
+                this.playSound(frequency, soundType, 0.7);
+
+                // Efectos visuales
+                this.createVisualEffects(x, y, color);
+
+                // Actualizar contador
+                this.updateSoundCount();
+
+                // Mostrar indicador de grabación
+                this.showRecordingIndicator();
+            }
+
+            async playSound(frequency, type, customVolume = null) {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                // Configurar el tipo de onda según el tipo de sonido
+                switch(type) {
+                    case 'treble':
+                        oscillator.type = 'sine';
+                        break;
+                    case 'mid':
+                        oscillator.type = 'square';
+                        break;
+                    case 'bass':
+                        oscillator.type = 'sawtooth';
+                        break;
+                }
+
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                
+                // Usar volumen personalizado o el volumen actual
+                const volumeLevel = (customVolume !== null ? customVolume : this.volume) * 0.3;
+                
+                // Envelope para evitar clicks
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volumeLevel, this.audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+
+                oscillator.start();
+                oscillator.stop(this.audioContext.currentTime + 0.3);
+            }
+
+            createVisualEffects(x, y, color) {
+                // Crear onda de sonido
+                const wave = document.createElement('div');
+                wave.className = 'sound-wave';
+                wave.style.left = (x - 25) + 'px';
+                wave.style.top = (y - 25) + 'px';
+                wave.style.width = '50px';
+                wave.style.height = '50px';
+                wave.style.border = `3px solid ${color}`;
+                wave.style.animation = 'expandFade 1s ease-out forwards';
+                document.body.appendChild(wave);
+
+                // Crear partículas
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    particle.style.background = color;
+                    
+                    const angle = (i / 8) * Math.PI * 2;
+                    const distance = 50 + Math.random() * 50;
+                    const finalX = x + Math.cos(angle) * distance;
+                    const finalY = y + Math.sin(angle) * distance;
+                    
+                    particle.style.animation = `particleMove 0.8s ease-out forwards`;
+                    particle.style.setProperty('--finalX', finalX + 'px');
+                    particle.style.setProperty('--finalY', finalY + 'px');
+                    
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 800);
+                }
+
+                setTimeout(() => wave.remove(), 1000);
+            }
+
+            async playRecording() {
+                if (this.recordedSounds.length === 0 || this.isPlaying) return;
+
+                this.isPlaying = true;
+                document.getElementById('playBtn').textContent = '⏸️ Reproduciendo...';
+
+                for (let i = 0; i < this.recordedSounds.length; i++) {
+                    const sound = this.recordedSounds[i];
+                    const delay = i === 0 ? 0 : sound.timestamp - this.recordedSounds[i-1].timestamp;
+
+                    await new Promise(resolve => {
+                        setTimeout(() => {
+                            // Usar el volumen configurado para la reproducción
+                            this.playSound(sound.frequency, sound.soundType, this.volume);
+                            this.createVisualEffects(sound.x, sound.y, sound.color);
+                            resolve();
+                        }, delay);
+                    });
+                }
+
+                this.isPlaying = false;
+                document.getElementById('playBtn').textContent = '▶️ Reproducir';
+            }
+
+            clearRecording() {
+                this.recordedSounds = [];
+                this.startTime = null;
+                this.updateSoundCount();
+                document.getElementById('recordingIndicator').classList.remove('active');
+            }
+
+            toggleTempo() {
+                this.tempoEnabled = !this.tempoEnabled;
+                const tempoBtn = document.getElementById('tempoBtn');
+                const tempoIndicator = document.getElementById('tempoIndicator');
+
+                if (this.tempoEnabled) {
+                    tempoBtn.textContent = '⏹️ Parar Tempo';
+                    tempoIndicator.classList.add('tempo-pulse');
+                    // Tempo de 120 BPM
+                    this.tempoInterval = setInterval(() => {
+                        // Visual feedback del tempo
+                    }, 500);
+                } else {
+                    tempoBtn.textContent = '🎵 Tempo';
+                    tempoIndicator.classList.remove('tempo-pulse');
+                    if (this.tempoInterval) {
+                        clearInterval(this.tempoInterval);
+                    }
+                }
+            }
+
+            updateSoundCount() {
+                document.getElementById('soundCount').textContent = this.recordedSounds.length;
+            }
+
+            showRecordingIndicator() {
+                const indicator = document.getElementById('recordingIndicator');
+                indicator.classList.add('active');
+                
+                setTimeout(() => {
+                    if (this.recordedSounds.length === 0) {
+                        indicator.classList.remove('active');
+                    }
+                }, 3000);
+            }
+        }
+
+        // CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes expandFade {
+                0% { transform: scale(1); opacity: 0.8; }
+                100% { transform: scale(4); opacity: 0; }
+            }
+            
+            @keyframes particleMove {
+                0% { transform: translate(0, 0); opacity: 1; }
+                100% { 
+                    transform: translate(calc(var(--finalX) - 50vw), calc(var(--finalY) - 50vh)); 
+                    opacity: 0; 
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Inicializar la aplicación
+        window.addEventListener('load', () => {
+            new MusicaMusical();
+        });
+
+        // Activar audio context en primer click
+        document.addEventListener('click', function() {
+            if (window.musicaMusical && window.musicaMusical.audioContext && window.musicaMusical.audioContext.state === 'suspended') {
+                window.musicaMusical.audioContext.resume();
+            }
